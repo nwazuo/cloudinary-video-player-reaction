@@ -1,0 +1,17 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+.emoji-timeline {
+  position: relative;
+  height: 0.25em;
+  margin-right: 10px;
+  margin-left: 10px;
+}
+
+.emoji-timeline .emoji-timeline-reaction {
+  position: absolute;
+  left: 0;
+  top: -16px;
+}
