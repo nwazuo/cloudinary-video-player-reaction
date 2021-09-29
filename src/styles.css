@@ -8,10 +8,36 @@
   height: 0.25em;
   margin-right: 10px;
   margin-left: 10px;
+  color: red;
 }
 
 .emoji-timeline .emoji-timeline-reaction {
   position: absolute;
   left: 0;
   top: -16px;
+  opacity: 0;
+}
+
+.emoji-timeline .emoji-timeline-reaction.control-visible {
+  opacity: 1 !important;
+  top: -66px;
+}
+
+.emoji-timeline .emoji-timeline-reaction.active {
+  color: green;
+  /* opacity: 1; */
+  animation-name: pop;
+  animation-duration: 2s;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    top: 0px;
+  }
+
+  to {
+    opacity: 1;
+    top: -120px;
+  }
 }
