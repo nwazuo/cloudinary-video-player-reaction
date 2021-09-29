@@ -53,9 +53,6 @@ const emojiReactions = [
 ];
 
 function VideoPlayerFunction(props) {
-  // const [mounted, setIsMounted] = useState(false);
-  const [videoParentNode, setVideoParentNode] = useState(null);
-  const [videoControlsNode, setVideoControlsNode] = useState(null);
   const [playerObj, setPlayerObj] = useState(null);
   const [playerDuration, setPlayerDuration] = useState(null);
 
@@ -161,25 +158,11 @@ function VideoPlayerFunction(props) {
     return videoPlayerInit();
   }, []);
 
-  useEffect(() => {
-    // setIsMounted(true); // may not be necessary but let's watch!
-    const videoParent = document.querySelector('.cld-video-player');
-    const videoControls = document.querySelector(
-      '.cld-video-player .vjs-control-bar'
-    );
-
-    setVideoParentNode(videoParent);
-    setVideoControlsNode(videoControls);
-  }, []);
-
   return (
     <>
       <video id="example-player" />
       {playerDuration && (
-        <EmojiTimeline
-          videoParentNode={videoParentNode}
-          videoControlsNode={videoControlsNode}
-        >
+        <EmojiTimeline>
           {userActive
             ? reactions.map((rxn) => {
                 // make the 'emoji-timeline-reaction' element into a react component...
@@ -223,7 +206,7 @@ function VideoPlayerFunction(props) {
   );
 }
 
-function EmojiTimeline({ videoParentNode, videoControlsNode, children }) {
+function EmojiTimeline({ children }) {
   const el = document.createElement('div');
   el.className = 'emoji-timeline';
 

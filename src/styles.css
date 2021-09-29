@@ -27,17 +27,22 @@
   color: green;
   /* opacity: 1; */
   animation-name: pop;
-  animation-duration: 2s;
+  animation-duration: 1s;
 }
 
 @keyframes pop {
   from {
-    opacity: 0;
-    top: 0px;
+    opacity: 1;
+    top: -16px;
+    transform: scale(1.3);
   }
 
-  to {
+  75% {
     opacity: 1;
+  }
+  to {
+    opacity: 0;
     top: -120px;
+    transform: scale(1);
   }
 }
