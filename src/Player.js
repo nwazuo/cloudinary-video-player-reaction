@@ -1,62 +1,25 @@
-import React, { useEffect, useState } from 'react';
-import ReactDOM from 'react-dom';
+import React, { useEffect, useState, useRef } from 'react';
+import usePortal from 'react-useportal';
 import { Cloudinary } from 'cloudinary-core';
 import 'cloudinary-video-player/dist/cld-video-player.light.min';
 import 'cloudinary-video-player/dist/cld-video-player.light.min.css';
 
-const emojiURLs = {
-  love: 'https://res.cloudinary.com/udemic/image/upload/v1632935667/hackmamba-emoji/love.png',
-  down: 'https://res.cloudinary.com/udemic/image/upload/v1632935647/hackmamba-emoji/down.png',
-  joy: 'https://res.cloudinary.com/udemic/image/upload/v1632935531/hackmamba-emoji/joy.png',
-  up: 'https://res.cloudinary.com/udemic/image/upload/v1632935479/hackmamba-emoji/up.png',
-  wow: 'https://res.cloudinary.com/udemic/image/upload/v1632935437/hackmamba-emoji/wow.png',
-  yay: 'https://res.cloudinary.com/udemic/image/upload/v1632935235/hackmamba-emoji/yay.png',
-};
+import EngagementBar from './EngagementBar';
 
-const emojiReactions = [
-  {
-    content: 'love',
-    time: 2,
-  },
-  {
-    content: 'down',
-    time: 3,
-  },
-  {
-    content: 'love',
-    time: 4,
-  },
-  {
-    content: 'joy',
-    time: 5,
-  },
-  {
-    content: 'up',
-    time: 6,
-  },
-  {
-    content: 'wow',
-    time: 8,
-  },
-  {
-    content: 'yay',
-    time: 9,
-  },
-  {
-    content: 'up',
-    time: 11,
-  },
-  {
-    content: 'up',
-    time: 15,
-  },
-];
+import { emojiURLs, emojiReactions } from './data';
 
 function VideoPlayerFunction(props) {
   const [playerObj, setPlayerObj] = useState(null);
   const [playerDuration, setPlayerDuration] = useState(null);
 
-  const [reactions, setReactions] = useState(emojiReactions);
+  const [reactions, _setReactions] = useState(emojiReactions);
+
+  const reactionsRef = useRef(reactions);
+  const setReactions = (data) => {
+    reactionsRef.current = data;
+    _setReactions(data);
+  };
+
   const [liveReactions, setLiveReactions] = useState([]);
 
   // keep track of whether video control is visible
@@ -65,6 +28,10 @@ function VideoPlayerFunction(props) {
   const cld = new Cloudinary({
     cloud_name: props.options.cloudName,
     secure: true,
+  });
+
+  const { Portal } = usePortal({
+    bindTo: document && document.getElementById('engagement-bar'),
   });
 
   // setup an event handler to be called at every second of the video
@@ -87,6 +54,34 @@ function VideoPlayerFunction(props) {
       }
     });
   };
+
+  function handleLiveReactionsUpdate(currentIntTime) {
+    const liveReactionsList = []; //needs better name
+
+    console.log('reactions modified ?', reactionsRef.current);
+
+    reactionsRef.current.forEach((rxn) => {
+      let activeRxn = { ...rxn };
+      activeRxn.active = false; //
+      if (rxn.time < currentIntTime) {
+        liveReactionsList.push(activeRxn);
+      }
+
+      // make the latest reaction(at current time) 'pop'
+      if (rxn.time === currentIntTime) {
+        // make copy of current active rxn and make its active key = true
+        let activeRxn = { ...rxn };
+        activeRxn.active = true;
+        liveReactionsList.push(activeRxn);
+      }
+    });
+
+    console.log('after active:false =>', liveReactionsList);
+    setLiveReactions(liveReactionsList);
+
+    // console.log('displayed reactions: ', { liveReactionsList });
+    console.log('current time: ', currentIntTime);
+  }
 
   function videoPlayerInit() {
     const player = cld.videoPlayer('example-player', {
@@ -127,28 +122,7 @@ function VideoPlayerFunction(props) {
     });
 
     // handle live reactions update
-    runPerVideoSecond(player, (currentIntTime) => {
-      const liveReactionsList = []; //needs better name
-
-      reactions.forEach((rxn) => {
-        if (rxn.time < currentIntTime) {
-          liveReactionsList.push(rxn);
-        }
-
-        // make the latest reaction(at current time) 'pop'
-        if (rxn.time === currentIntTime) {
-          // make copy of current active rxn and make its active key = true
-          let activeRxn = { ...rxn };
-          activeRxn.active = true;
-          liveReactionsList.push(activeRxn);
-        }
-      });
-
-      setLiveReactions(liveReactionsList);
-
-      // console.log('displayed reactions: ', { liveReactionsList });
-      console.log('current time: ', currentIntTime);
-    });
+    runPerVideoSecond(player, handleLiveReactionsUpdate);
 
     // make player object global so it can be inspected
     window.player = player;
@@ -161,10 +135,18 @@ function VideoPlayerFunction(props) {
   return (
     <>
       <video id="example-player" />
+      <Portal>
+        <EngagementBar
+          currentReactions={reactions}
+          updateReactions={setReactions}
+          updateLiveReactions={handleLiveReactionsUpdate}
+          videoPlayerObj={playerObj}
+        />
+      </Portal>
       {playerDuration && (
         <EmojiTimeline>
           {userActive
-            ? reactions.map((rxn) => {
+            ? reactionsRef.current.map((rxn) => {
                 // make the 'emoji-timeline-reaction' element into a react component...
 
                 return (
@@ -175,8 +157,8 @@ function VideoPlayerFunction(props) {
                     }}
                   >
                     <img
-                      src={emojiURLs[rxn.content]}
-                      alt={rxn.content}
+                      src={emojiURLs[rxn.type]}
+                      alt={rxn.type}
                       width="16px"
                     />
                   </div>
@@ -193,8 +175,8 @@ function VideoPlayerFunction(props) {
                     }}
                   >
                     <img
-                      src={emojiURLs[rxn.content]}
-                      alt={rxn.content}
+                      src={emojiURLs[rxn.type]}
+                      alt={rxn.type}
                       width="16px"
                     />
                   </div>
